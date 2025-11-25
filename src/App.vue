@@ -1,30 +1,75 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import { ref, computed, onMounted } from 'vue';
+import { fetchLessons, postOrder, putLesson } from './api';
+
+// view state
+const view = ref('lessons'); // 'lessons' | 'cart'
+
+// data
+const lessons = ref([]);
+const cart = ref([]);
+
+// sorting
+const sortKey = ref('topic'); // 'topic' | 'location' | 'price' | 'space'
+const sortDir = ref('asc');   // 'asc' | 'desc'
+
+// checkout inputs
+const name = ref('');
+const phone = ref('');
+
+// validation
+const validName = computed(() => /^[A-Za-z\s'-]+$/.test(name.value));
+const validPhone = computed(() => /^\d+$/.test(phone.value));
+const checkoutEnabled = computed(
+  () => validName.value && validPhone.value && cart.value.length > 0
+);
+
+// sorted lessons
+const sortedLessons = computed(() => {
+  const arr = [...lessons.value];
+  arr.sort((a, b) => {
+    const k = sortKey.value;
+    const av = a[k];
+    const bv = b[k];
+    const cmp =
+      typeof av === 'number' && typeof bv === 'number'
+        ? av - bv
+        : String(av).localeCompare(String(bv));
+    return sortDir.value === 'asc' ? cmp : -cmp;
+  });
+  return arr;
+});
+
+// actions
+function addToCart(item) {
+  if (item.space > 0) {
+    cart.value.push({
+      _id: item._id,
+      topic: item.topic,
+      price: item.price,
+    });
+    item.space -= 1;
+  }
+}
+
+function removeFromCart(index) {
+  const removed = cart.value.splice(index, 1)[0];
+  const lesson = lessons.value.find((l) => l._id === removed._id);
+  if (lesson) {
+    lesson.space += 1;
+  }
+}
+
+async function checkout() {
+  if (!checkoutEnabled.value) return;
+
+  const lessonIDs = cart.value.map((i) => i._id);
+  await postOrder({
+    name: name.value,
+    phone: phone.value,
+    lessonIDs,
+    spaces: cart.value.length,
+  });
+}
+
 </script>
-
-<template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
-</template>
-
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>

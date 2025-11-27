@@ -80,5 +80,9 @@ async function checkout() {
   view.value = 'lessons';
 }
 
+// Used whenever I want to re-fetch the lessons again from the backend
+async function reloadLessons() {
+  lessons.value = await fetchLessons();
+}
 
 </script>

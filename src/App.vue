@@ -85,4 +85,9 @@ async function reloadLessons() {
   lessons.value = await fetchLessons();
 }
 
+// When the page loads, I fetch the lessons once
+onMounted(async () => {
+  lessons.value = await fetchLessons();
+});
+
 </script>

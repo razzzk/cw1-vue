@@ -91,3 +91,54 @@ onMounted(async () => {
 });
 
 </script>
+
+<template>
+  <div class="page">
+
+    <!-- Top header with title, sorting and cart button -->
+    <header class="header">
+      <div class="header-main">
+        <h1 class="title">After-School Classes</h1>
+        <p class="subtitle">Browse activities and book a place for a student.</p>
+      </div>
+
+      <div class="header-actions">
+        <div class="sort-controls">
+          <label>
+            Sort by
+            <select v-model="sortKey">
+              <option value="topic">Subject</option>
+              <option value="location">Location</option>
+              <option value="price">Price</option>
+              <option value="space">Spaces</option>
+            </select>
+          </label>
+
+          <label>
+            Order
+            <select v-model="sortDir">
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="header-buttons">
+          <button class="secondary-btn" @click="reloadLessons">
+            Refresh
+          </button>
+
+          <button
+            class="cart-btn"
+            :disabled="view === 'lessons' && cart.length === 0"
+            @click="view = view === 'lessons' ? 'cart' : 'lessons'"
+          >
+            <span v-if="view === 'lessons'">Cart</span>
+            <span v-else>Back</span>
+            <span class="cart-count">{{ cart.length }}</span>
+          </button>
+        </div>
+      </div>
+    </header>
+    </div>
+   </template> 

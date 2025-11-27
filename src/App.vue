@@ -70,6 +70,15 @@ async function checkout() {
     lessonIDs,
     spaces: cart.value.length,
   });
+
+  for (const l of lessons.value) {
+    await putLesson(l._id, { space: l.space });
+  }
+
+  cart.value = [];
+  alert('Order submitted successfully');
+  view.value = 'lessons';
 }
+
 
 </script>

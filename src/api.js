@@ -1,5 +1,5 @@
 // src/api.js
-const API = 'http://localhost:3000'; // 
+const API = 'https://cw1-express.onrender.com'; // switched to render.com url where the database is stored 
 
 export function fetchLessons() {
   return fetch(`${API}/lessons`).then(r => r.json());

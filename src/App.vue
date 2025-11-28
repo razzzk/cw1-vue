@@ -2,73 +2,92 @@
 import { ref, computed, onMounted } from 'vue';
 import { fetchLessons, postOrder, putLesson } from './api';
 
-// view state
-const view = ref('lessons'); // 'lessons' | 'cart'
+// I use this to switch between the main lessons page and the cart page
+const view = ref('lessons');
 
-// data
+// I store all lessons and the user's cart in these two refs
 const lessons = ref([]);
 const cart = ref([]);
 
-// sorting
-const sortKey = ref('topic'); // 'topic' | 'location' | 'price' | 'space'
-const sortDir = ref('asc');   // 'asc' | 'desc'
+// These two are used for sorting the lessons in the dropdowns
+const sortKey = ref('topic');
+const sortDir = ref('asc');
 
-// checkout inputs
+// These store the user's checkout details
 const name = ref('');
 const phone = ref('');
 
-// validation
+// Simple validation for name and phone so the form is not empty or wrong
+// Name: the user is only allowed to  insetonly letters/spaces
+// Phone the user is only allowed to insert digits 
 const validName = computed(() => /^[A-Za-z\s'-]+$/.test(name.value));
 const validPhone = computed(() => /^\d+$/.test(phone.value));
-const checkoutEnabled = computed(
-  () => validName.value && validPhone.value && cart.value.length > 0
-);
 
-// sorted lessons
-const sortedLessons = computed(() => {
-  const arr = [...lessons.value];
-  arr.sort((a, b) => {
-    const k = sortKey.value;
-    const av = a[k];
-    const bv = b[k];
-    const cmp =
-      typeof av === 'number' && typeof bv === 'number'
-        ? av - bv
-        : String(av).localeCompare(String(bv));
-    return sortDir.value === 'asc' ? cmp : -cmp;
-  });
-  return arr;
+// Button should only be active when both fields are valid and cart not empty
+const checkoutEnabled = computed(() => {
+  return validName.value && validPhone.value && cart.value.length > 0;
 });
 
-// actions
+// I make a sorted version of the lessons depending on what the user picked
+const sortedLessons = computed(() => {
+  const copy = [...lessons.value];
+
+  copy.sort((a, b) => {
+    const key = sortKey.value;
+    const aVal = a[key];
+    const bVal = b[key];
+
+    // Numbers and text need different comparisons
+    let cmp;
+    if (typeof aVal === 'number') {
+      cmp = aVal - bVal;
+    } else {
+      cmp = String(aVal).localeCompare(String(bVal));
+    }
+
+    return sortDir.value === 'asc' ? cmp : -cmp;
+  });
+
+  return copy;
+});
+
+// When the user adds a lesson, I push it into the cart and lower its space count
 function addToCart(item) {
   if (item.space > 0) {
     cart.value.push({
       _id: item._id,
       topic: item.topic,
-      price: item.price,
+      price: item.price
     });
+
     item.space -= 1;
   }
 }
 
+// When removing a lesson from the cart, I increase its space again
 function removeFromCart(index) {
   const removed = cart.value.splice(index, 1)[0];
-  const lesson = lessons.value.find((l) => l._id === removed._id);
+  const lesson = lessons.value.find(l => l._id === removed._id);
+
   if (lesson) {
     lesson.space += 1;
   }
 }
 
+// When the user submits the order:
+// 1 Save the order in the backend
+// 2 Update each lesson's spaces in the database
+// 3 Clear the cart and go back to lessons
 async function checkout() {
   if (!checkoutEnabled.value) return;
 
-  const lessonIDs = cart.value.map((i) => i._id);
+  const lessonIDs = cart.value.map(i => i._id);
+
   await postOrder({
     name: name.value,
     phone: phone.value,
-    lessonIDs,
-    spaces: cart.value.length,
+    lessonIDs: lessonIDs,
+    spaces: cart.value.length
   });
 
   for (const l of lessons.value) {
@@ -89,7 +108,6 @@ async function reloadLessons() {
 onMounted(async () => {
   lessons.value = await fetchLessons();
 });
-
 </script>
 
 <template>

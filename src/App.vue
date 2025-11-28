@@ -140,5 +140,141 @@ onMounted(async () => {
         </div>
       </div>
     </header>
-    </div>
-   </template> 
+
+    <!-- Main content -->
+    <main class="content">
+
+      <!-- LESSONS PAGE -->
+      <section v-if="view === 'lessons'" class="lessons-section">
+
+        <div class="info-bar">
+          <span>{{ sortedLessons.length }} lessons available</span>
+          <span v-if="cart.length > 0">
+            In cart: <strong>{{ cart.length }}</strong>
+          </span>
+        </div>
+
+        <!-- Lessons grid -->
+        <div class="lesson-grid">
+          <article
+            v-for="it in sortedLessons"
+            :key="it._id"
+            class="lesson-card lesson-card--horizontal"
+          >
+            <div class="lesson-left">
+              <div class="lesson-chip">{{ it.topic }}</div>
+
+              <div class="lesson-row">
+                <span class="icon">📍</span>
+                <span>{{ it.location }}</span>
+              </div>
+
+              <div class="lesson-row">
+                <span class="icon">🎟️</span>
+                <span>
+                  <strong>{{ it.space }}</strong> spaces left
+                </span>
+              </div>
+            </div>
+
+            <div class="lesson-right">
+              <div class="price-line">£{{ it.price }}</div>
+
+              <button
+                class="primary-btn"
+                :disabled="it.space === 0"
+                @click="addToCart(it)"
+              >
+                <span v-if="it.space > 0">Add to cart</span>
+                <span v-else>Sold out</span>
+              </button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- CART PAGE -->
+      <section v-else class="cart-section">
+        <div class="cart-columns">
+
+          <!-- Left side: items in cart -->
+          <div class="cart-box">
+            <h2>Cart</h2>
+            <p class="cart-subtitle">Remove lessons if you change your mind.</p>
+
+            <div v-if="cart.length === 0" class="empty">
+              <p>Your cart is empty.</p>
+            </div>
+
+            <ul v-else class="cart-list">
+              <li v-for="(c, i) in cart" :key="i" class="cart-row">
+                <div>
+                  <div class="cart-title">{{ c.topic }}</div>
+                  <div class="cart-price">£{{ c.price }}</div>
+                </div>
+                <button
+                  class="secondary-btn secondary-btn--small"
+                  @click="removeFromCart(i)"
+                >
+                  Remove
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Right side: checkout -->
+          <div class="cart-box">
+            <h2>Checkout</h2>
+            <p class="cart-subtitle">Enter your details to submit the order.</p>
+
+            <div class="field">
+              <label for="name">Name</label>
+              <input
+                id="name"
+                v-model="name"
+                type="text"
+                placeholder="Student or parent name"
+                :class="{ 'input-error': name && !validName }"
+              />
+              <small v-if="name && !validName" class="error">
+                Name must contain letters and spaces only.
+              </small>
+            </div>
+
+            <div class="field">
+              <label for="phone">Phone</label>
+              <input
+                id="phone"
+                v-model="phone"
+                type="text"
+                placeholder="07..."
+                :class="{ 'input-error': phone && !validPhone }"
+              />
+              <small v-if="phone && !validPhone" class="error">
+                Phone must contain numbers only.
+              </small>
+            </div>
+
+            <button
+              class="primary-btn primary-btn--full"
+              :disabled="!checkoutEnabled"
+              @click="checkout"
+            >
+              Submit order
+            </button>
+
+            <div class="validation-info">
+              <span :class="['badge', validName ? 'badge--ok' : 'badge--bad']">
+                Name valid: {{ validName }}
+              </span>
+              <span :class="['badge', validPhone ? 'badge--ok' : 'badge--bad']">
+                Phone valid: {{ validPhone }}
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+    </main>
+  </div>
+</template>
